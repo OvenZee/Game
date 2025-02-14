@@ -1,3 +1,5 @@
+from ctypes.wintypes import RGB
+from pickle import REDUCE
 import pygame
 import random
 
@@ -334,7 +336,7 @@ def main(win):  # game loop
                 run = False
                 pygame.display.quit()
 
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN: # need to make it let me hold down
                 if event.key == pygame.K_LEFT:
                     current_piece.x -= 1
                     if not(valid_space(current_piece, grid)):
@@ -383,18 +385,30 @@ def main(win):  # game loop
 def main_menu(win): 
     run = True
     while run:
+        font = pygame.font.SysFont("comicsans", 40, bold=True)
         win.fill((0,0,0))
-        draw_text_middle(win, 'Press Any Key To Play', 60, (255,255,255))
+        button = pygame.Rect(200,200,110,60)
         pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.KEYDOWN:
-                main(win)
+        for events in pygame.event.get():
+            if events.type == pygame.QUIT:
+                run=False
+            if events.type == pygame.MOUSEBUTTONDOWN:
+                if button.collidepoint(events.pos):
+                    main(win)
+        a,b = pygame.mouse.get_pos()
+        if button.x <= a <= button.x + 110 and button.y <= b <= button.y +60:
+            pygame.draw.rect(win,(180,180,180),button )
+        else:
+            pygame.draw.rect(win, (110,110,110),button)
+        win.blit(font.render('START', 1, (255, 255, 201,255)),(button.x +5, button.y+5))
+        pygame.display.update()
 
     pygame.display.quit()
 
 
+win = pygame.display.set_mode((s_width, s_height))
+pygame.display.set_caption('Tetris')
+main_menu(win)
 win = pygame.display.set_mode((s_width, s_height))
 pygame.display.set_caption('Tetris')
 main_menu(win)
