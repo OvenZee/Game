@@ -124,6 +124,10 @@ shapes = [S, Z, I, O, J, L, T]
 shape_colors = [(0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0), (255, 165, 0), (0, 0, 255), (128, 0, 128)]
 # index 0 - 6 represent shape
 
+users_db = {
+    "user1": "password1",
+    "user2": "password2"
+}
 
 class Piece(object):  # class for the pieces
     def __init__(self, x, y, shape):
@@ -262,6 +266,82 @@ def max_score(): #
 
     return score
 
+def draw_input_box(surface, text, rect, color, active_color):
+    """Draws the input box."""
+    font = pygame.font.SysFont("comicsans", 30)
+    txt_surface = font.render(text, True, color)
+    width = max(200, txt_surface.get_width()+10)
+    rect.w = width
+    pygame.draw.rect(surface, color, rect, 2)
+    surface.blit(txt_surface, (rect.x+5, rect.y+5))
+
+def login_screen(win):
+    """Handles the login screen where users enter their username and password."""
+    run = True
+    username = ''
+    password = ''
+    active_field = 'username'  # 'username' or 'password'
+    color_inactive = (150, 150, 150)
+    color_active = (0, 255, 0)
+    input_box_username = pygame.Rect(200, 200, 140, 32)
+    input_box_password = pygame.Rect(200, 250, 140, 32)
+    color_username = color_inactive
+    color_password = color_inactive
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.display.quit()
+            if event.type == pygame.KEYDOWN:
+                if active_field == 'username':
+                    if event.key == pygame.K_BACKSPACE:
+                        username = username[:-1]
+                    elif event.key == pygame.K_RETURN:
+                        active_field = 'password'  # Switch to password input
+                    else:
+                        username += event.unicode
+                elif active_field == 'password':
+                    if event.key == pygame.K_BACKSPACE:
+                        password = password[:-1]
+                    elif event.key == pygame.K_RETURN:
+                        # Check the login credentials
+                        if username in users_db and users_db[username] == password:
+                            print("Login Successful!")
+                            return True  # Successful login
+                        else:
+                            print("Invalid username or password.")
+                            username = ''
+                            password = ''
+                            active_field = 'username'  # Go back to username input
+                    else:
+                        password += event.unicode
+
+        # Fill screen with black
+        win.fill((0, 0, 0))
+
+        # Title
+        font = pygame.font.SysFont("comicsans", 60)
+        label = font.render('Login', 1, (255, 255, 255))
+        win.blit(label, (top_left_x + play_width / 2 - (label.get_width() / 2), top_left_y + 50))
+
+        # Username input box
+        if active_field == 'username':
+            color_username = color_active
+        else:
+            color_username = color_inactive
+
+        draw_input_box(win, username, input_box_username, color_username, color_active)
+
+        # Password input box
+        if active_field == 'password':
+            color_password = color_active
+        else:
+            color_password = color_inactive
+
+        draw_input_box(win, '*' * len(password), input_box_password, color_password, color_active)
+
+        # Button for login (We can add a button later if needed)
+        pygame.display.update()
 
 def draw_window(surface, grid, score=0, last_score = 0):
     surface.fill((0, 0, 0))
@@ -385,30 +465,15 @@ def main(win):  # game loop
 def main_menu(win): 
     run = True
     while run:
-        font = pygame.font.SysFont("comicsans", 40, bold=True)
-        win.fill((0,0,0))
-        button = pygame.Rect(200,200,110,60)
-        pygame.display.update()
-        for events in pygame.event.get():
-            if events.type == pygame.QUIT:
-                run=False
-            if events.type == pygame.MOUSEBUTTONDOWN:
-                if button.collidepoint(events.pos):
-                    main(win)
-        a,b = pygame.mouse.get_pos()
-        if button.x <= a <= button.x + 110 and button.y <= b <= button.y +60:
-            pygame.draw.rect(win,(180,180,180),button )
-        else:
-            pygame.draw.rect(win, (110,110,110),button)
-        win.blit(font.render('START', 1, (255, 255, 201,255)),(button.x +5, button.y+5))
-        pygame.display.update()
+        # Start with the login screen
+        if login_screen(win):
+            main(win)  # Proceed to the game after successful login
+            break  # Exit the login screen after playing the game
 
-    pygame.display.quit()
+        pygame.display.quit()
 
 
-win = pygame.display.set_mode((s_width, s_height))
-pygame.display.set_caption('Tetris')
-main_menu(win)
+
 win = pygame.display.set_mode((s_width, s_height))
 pygame.display.set_caption('Tetris')
 main_menu(win)
